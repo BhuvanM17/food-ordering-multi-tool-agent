@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ByteBite Bistro - AI Food Ordering Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-icon">🍔</div>
+                <div class="brand-info">
+                    <div class="brand-title">ByteBite <span class="accent-text">Bistro</span></div>
+                    <div class="brand-subtitle">AI-Powered Gourmet Kitchen</div>
+                </div>
+            </div>
+
+            <div class="nav-status-pill">
+                <span class="status-dot"></span>
+                <span>Open Now • Delivery in 20-30 min</span>
+            </div>
+
+            <div class="nav-actions">
+                <button class="btn btn-secondary" id="trackOrderNavBtn" title="Track an existing order">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"></path><path d="M16.5 9.4 7.55 4.24"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><line x1="12" y1="22" x2="12" y2="12"></line><circle cx="18.5" cy="15.5" r="2.5"></circle><path d="M20.27 17.27 22 19"></path></svg>
+                    <span>Track Order</span>
+                </button>
+                <button class="btn btn-primary cart-toggle-btn" id="openCartBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>
+                    <span>Cart</span>
+                    <span class="cart-badge" id="cartCountBadge">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Quick Prompt Suggestions Ribbon -->
+    <section class="prompt-ribbon">
+        <div class="ribbon-container">
+            <span class="ribbon-label">✨ Quick Prompts:</span>
+            <div class="prompts-scroll">
+                <button class="prompt-chip" data-prompt="Add 2 Chicken Burgers and 1 Coke to my cart">🍔 2 Chicken Burgers & Coke</button>
+                <button class="prompt-chip" data-prompt="What pizzas do you have on the menu?">🍕 View Pizza Options</button>
+                <button class="prompt-chip" data-prompt="Can you recommend vegetarian items?">🌱 Vegetarian Specials</button>
+                <button class="prompt-chip" data-prompt="Show my cart contents">🛒 Show My Cart</button>
+                <button class="prompt-chip" data-prompt="Place my order now">🧾 Place Order</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Area: Split View -->
+    <main class="main-layout">
+        <!-- Left Panel: Menu Explorer -->
+        <section class="menu-section">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Explore Our Menu</h2>
+                    <p class="section-desc">Handcrafted meals made fresh to order</p>
+                </div>
+                <div class="menu-search-wrapper">
+                    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="menuSearchInput" placeholder="Search burgers, pizzas, sides...">
+                </div>
+            </div>
+
+            <!-- Category Filter Tabs -->
+            <div class="category-tabs" id="categoryTabsContainer">
+                <button class="cat-tab active" data-category="All">🔥 All Items</button>
+                <!-- Dynamic categories populated via JS -->
+            </div>
+
+            <!-- Menu Grid -->
+            <div class="menu-grid" id="menuGrid">
+                <!-- Dynamic menu cards populated via JS -->
+                <div class="loading-spinner-wrapper">
+                    <div class="spinner"></div>
+                    <p>Loading fresh menu...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: AI Concierge Chat -->
+        <section class="chat-section">
+            <div class="chat-card">
+                <div class="chat-header">
+                    <div class="ai-avatar-wrapper">
+                        <div class="ai-avatar">🤖</div>
+                        <div class="ai-status-indicator"></div>
+                    </div>
+                    <div class="chat-header-info">
+                        <div class="chat-title">ByteBite AI Assistant</div>
+                        <div class="chat-subtitle">Powered by Gemini 2.5 Multi-Tool Agent</div>
+                    </div>
+                    <button class="icon-btn" id="clearChatBtn" title="Reset Conversation">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Chat Message Stream -->
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant-message">
+                        <div class="msg-avatar">🤖</div>
+                        <div class="msg-bubble">
+                            <p>Hello! Welcome to <strong>ByteBite Bistro</strong>! 🍔🍕</p>
+                            <p>I can help you browse our menu, add dishes to your cart, customize quantities, and place your order. What are you craving today?</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typing indicator -->
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="msg-avatar">🤖</div>
+                    <div class="typing-bubble">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span class="typing-text">AI is thinking & calling tools...</span>
+                </div>
+
+                <!-- Chat Input Form -->
+                <form class="chat-input-form" id="chatForm">
+                    <input type="text" id="chatInput" placeholder="Tell me what you'd like (e.g. '2 chicken burgers and a pepsi')..." autocomplete="off">
+                    <button type="submit" class="btn btn-send" id="sendBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Slide-out Shopping Cart Drawer -->
+    <div class="cart-drawer-overlay" id="cartOverlay"></div>
+    <aside class="cart-drawer" id="cartDrawer">
+        <div class="cart-drawer-header">
+            <div class="cart-header-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>
+                <span>Your Order</span>
+            </div>
+            <button class="icon-btn" id="closeCartBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+
+        <div class="cart-items-list" id="cartItemsList">
+            <!-- Populated via JS -->
+            <div class="cart-empty-state">
+                <div class="empty-icon">🛒</div>
+                <h4>Your cart is empty</h4>
+                <p>Ask our AI agent or click menu items to add delicious food!</p>
+            </div>
+        </div>
+
+        <div class="cart-drawer-footer" id="cartFooter">
+            <div class="bill-row">
+                <span>Subtotal</span>
+                <span id="billSubtotal">$0.00</span>
+            </div>
+            <div class="bill-row">
+                <span>Estimated Tax (8%)</span>
+                <span id="billTax">$0.00</span>
+            </div>
+            <div class="bill-row">
+                <span>Delivery Fee</span>
+                <span class="text-free">FREE</span>
+            </div>
+            <div class="bill-divider"></div>
+            <div class="bill-row total-row">
+                <span>Total</span>
+                <span class="total-amount" id="billTotal">$0.00</span>
+            </div>
+
+            <div class="cart-actions">
+                <button class="btn btn-primary btn-block" id="checkoutBtn">
+                    <span>⚡ Place Order Now</span>
+                </button>
+                <button class="btn btn-secondary btn-block" id="askAiToOrderBtn">
+                    <span>💬 Ask AI to Confirm Order</span>
+                </button>
+                <button class="btn-text-danger" id="clearCartBtn">Clear Cart</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Order Tracking & Receipt Modal -->
+    <div class="modal-overlay" id="orderModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">📦 Order Status & Tracker</h3>
+                <button class="icon-btn" id="closeModalBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="track-input-group">
+                    <input type="number" id="trackOrderIdInput" placeholder="Enter Order ID (e.g. 1)" min="1">
+                    <button class="btn btn-primary" id="searchOrderBtn">Track</button>
+                </div>
+
+                <!-- Order Details Display -->
+                <div class="order-result" id="orderResult" style="display: none;">
+                    <div class="order-badge-row">
+                        <span class="order-id-tag" id="resOrderId">Order #1</span>
+                        <span class="status-badge" id="resOrderStatus">Confirmed</span>
+                    </div>
+
+                    <!-- Progress Stepper -->
+                    <div class="stepper">
+                        <div class="step active" id="step1">
+                            <div class="step-circle">✓</div>
+                            <div class="step-label">Confirmed</div>
+                        </div>
+                        <div class="step-line" id="line1"></div>
+                        <div class="step active" id="step2">
+                            <div class="step-circle">🍳</div>
+                            <div class="step-label">Kitchen</div>
+                        </div>
+                        <div class="step-line" id="line2"></div>
+                        <div class="step" id="step3">
+                            <div class="step-circle">🛵</div>
+                            <div class="step-label">On Way</div>
+                        </div>
+                        <div class="step-line" id="line3"></div>
+                        <div class="step" id="step4">
+                            <div class="step-circle">🎉</div>
+                            <div class="step-label">Delivered</div>
+                        </div>
+                    </div>
+
+                    <div class="order-receipt">
+                        <h4>Order Summary</h4>
+                        <div id="receiptItemsList" class="receipt-items"></div>
+                        <div class="receipt-divider"></div>
+                        <div class="receipt-total-row">
+                            <span>Total Paid:</span>
+                            <span class="receipt-total-val" id="resOrderTotal">$0.00</span>
+                        </div>
+                        <div class="order-time" id="resOrderTime">Placed at: --</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

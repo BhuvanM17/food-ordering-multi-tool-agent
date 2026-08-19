@@ -105,3 +105,80 @@ def track_order(order_id: int) -> str:
                 f"Total: ${row['total']:.2f}\n"
                 f"Status: {row['status']}\n"
                 f"Placed at: {row['created_at']}")
+
+
+# ==================== API Helper Functions ====================
+
+def get_cart_data():
+    """Return raw cart data and calculated totals for the frontend."""
+    subtotal = sum(item["price"] * item["quantity"] for item in cart)
+    tax = round(subtotal * 0.08, 2)
+    total = round(subtotal + tax, 2)
+    return {
+        "items": list(cart),
+        "subtotal": round(subtotal, 2),
+        "tax": tax,
+        "total": total,
+        "count": sum(item["quantity"] for item in cart)
+    }
+
+
+def update_cart_item_quantity(item_id: int, delta: int):
+    """Adjust quantity of an item in the cart, removing it if quantity reaches 0."""
+    global cart
+    for item in cart:
+        if item["id"] == item_id:
+            item["quantity"] += delta
+            if item["quantity"] <= 0:
+                cart.remove(item)
+            break
+    return get_cart_data()
+
+
+def remove_cart_item(item_id: int):
+    """Remove an item completely from cart."""
+    global cart
+    cart = [item for item in cart if item["id"] != item_id]
+    return get_cart_data()
+
+
+def clear_cart_data():
+    """Clear all items from cart."""
+    global cart
+    cart = []
+    return get_cart_data()
+
+
+def get_all_menu():
+    """Fetch all menu items from the database."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, category, price, description FROM menu ORDER BY category, name")
+        rows = cursor.fetchall()
+        return [
+            {
+                "id": row["id"],
+                "name": row["name"],
+                "category": row["category"],
+                "price": row["price"],
+                "description": row["description"]
+            }
+            for row in rows
+        ]
+
+
+def get_order_details(order_id: int):
+    """Fetch structured order details by ID."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, items, total, status, created_at FROM orders WHERE id = ?", (order_id,))
+        row = cursor.fetchone()
+        if not row:
+            return None
+        return {
+            "id": row["id"],
+            "items": json.loads(row["items"]),
+            "total": row["total"],
+            "status": row["status"],
+            "created_at": row["created_at"]
+        }

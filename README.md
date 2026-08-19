@@ -1,17 +1,17 @@
-# 🍔 AI Food Ordering Agent
+# 🍔 ByteBite Bistro - AI Food Ordering Web Application
 
-An autonomous, conversational food ordering agent powered by **Google Gemini 2.5** and **Python**. The agent interacts with users in natural language, searches restaurant menus, manages shopping carts, places orders, and tracks existing orders using Gemini function calling (Tool Use) and an SQLite backend.
+An autonomous, conversational food ordering web application powered by **FastAPI**, **Google Gemini 2.5**, and **SQLite**. The app features a modern web dashboard with an interactive menu, slide-out shopping cart, live order tracking, and a real-time AI Concierge powered by Gemini's tool-use function calling.
 
 ---
 
 ## ✨ Features
 
-- 💬 **Natural Language Ordering**: Understands conversational multi-item requests (e.g. *"Can I get 2 chicken burgers and a chilled coke?"*).
-- 🛠️ **Automatic Tool Calling**: Powered by Gemini 2.5 function calling to autonomously query databases and trigger actions.
-- 📋 **Menu Search**: Dynamically searches dishes by name, category, or description.
-- 🛒 **Cart Management**: Real-time item additions, quantity updates, and cart calculations.
-- 📦 **Order Placement & Tracking**: Generates unique order IDs and stores order details in SQLite.
-- 🔄 **Multi-Turn Memory**: Preserves context across the entire conversation.
+- 💬 **Live AI Concierge Chat**: Conversational food ordering powered by Google Gemini 2.5 (`gemini-2.5-flash-lite`) with multi-turn session memory and quick prompt chips.
+- 🛠️ **Autonomous Tool Calling**: Gemini autonomously queries SQLite tables, updates shopping carts, places orders, and checks statuses.
+- 🍕 **Interactive Visual Menu**: Category filters (*Burgers, Pizza, Sides, Drinks*), instant text search, price tags, and one-click "Add to Cart".
+- 🛒 **Real-Time Shopping Cart Drawer**: Instant item counter, quantity increment/decrement controls, tax calculation (8%), and checkout buttons.
+- 📦 **Order Tracking & Receipt Modal**: 4-stage visual progress stepper (*Confirmed* ➔ *Kitchen* ➔ *Out for Delivery* ➔ *Delivered*) and itemized receipts by Order ID.
+- ⚡ **FastAPI Backend**: Asynchronous REST API serving both the single-page application and backend endpoints.
 
 ---
 
@@ -20,14 +20,22 @@ An autonomous, conversational food ordering agent powered by **Google Gemini 2.5
 ```text
 food_ordering_agent/
 │
-├── agent.py            # AI Agent configuration & Gemini tool execution loop
-├── database.py         # SQLite database initialization & sample menu seeding
-├── tools.py            # Real Python tool functions (search, cart, order, track)
-├── main.py             # CLI chat interface and interaction loop
+├── app.py              # FastAPI Web & REST API backend server
+├── agent.py            # Gemini 2.5 Agent with session management & tool calling
+├── database.py         # SQLite database schema, connection manager & menu seed
+├── tools.py            # Python tool functions (search_menu, add_to_cart, etc.)
+├── main.py             # Optional CLI chat interface
 │
-├── .env.example        # Environment variable template
+├── static/             # Frontend Web Assets
+│   ├── css/
+│   │   └── style.css   # Dark glassmorphic styling & micro-animations
+│   ├── js/
+│   │   └── app.js      # Client-side state, chat stream & cart synchronization
+│   └── index.html      # Responsive single-page application UI
+│
+├── .env.example        # Environment variables template
 ├── .gitignore          # Ignores sensitive keys, SQLite DB, and caches
-└── requirements.txt    # Project dependencies
+└── requirements.txt    # Project dependencies (FastAPI, Uvicorn, Gemini SDK)
 ```
 
 ---
@@ -42,8 +50,8 @@ food_ordering_agent/
 ### 2. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/food_ordering_agent.git
-cd food_ordering_agent
+git clone https://github.com/BhuvanM17/food-ordering-multi-tool-agent.git
+cd food-ordering-multi-tool-agent
 ```
 
 ### 3. Set Up Virtual Environment
@@ -70,14 +78,14 @@ pip install -r requirements.txt
 Create a `.env` file from `.env.example`:
 
 ```bash
-# Windows PowerShell
+# Windows
 copy .env.example .env
 
 # macOS / Linux
 cp .env.example .env
 ```
 
-Open `.env` and paste your Gemini API key:
+Open `.env` and set your key:
 ```env
 GEMINI_API_KEY=your_actual_gemini_api_key_here
 ```
@@ -86,59 +94,49 @@ GEMINI_API_KEY=your_actual_gemini_api_key_here
 
 ## 🎮 How to Run
 
-Launch the CLI agent:
+### Option 1: Web Interface (Recommended)
+
+Launch the FastAPI application:
+
+```bash
+python app.py
+```
+*(Or run with Uvicorn: `uvicorn app:app --reload --port 8000`)*
+
+Open your browser and navigate to:
+👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+
+---
+
+### Option 2: CLI Terminal Mode
+
+You can also run the agent directly inside your terminal:
 
 ```bash
 python main.py
 ```
 
-### Example Interaction
+---
 
-```text
-🍔 Food Ordering AI Agent (Pure Python Version)
-Type 'quit' to exit
+## 🔌 REST API Endpoints
 
-You: Hi, what burgers do you have?
-Agent: We have the following burgers on our menu:
-- Chicken Burger: Juicy chicken patty with lettuce & mayo ($8.99)
-- Veggie Burger: Fresh vegetable patty with special sauce ($7.49)
-- Cheese Burger: Classic beef with melted cheese ($9.49)
-
-You: Add 2 chicken burgers and 1 coke to my cart
-Agent: Added 2 Chicken Burger and 1 Coke to your cart. 
-
-Current Cart:
-- 2 x Chicken Burger ($8.99) = $17.98
-- 1 x Coke ($1.99) = $1.99
-Total: $19.97
-
-You: Place my order
-Agent: Order placed successfully! Order ID: 1, Total: $19.97, Status: Confirmed.
-
-You: Track order 1
-Agent: Order ID: 1
-Total: $19.97
-Status: Confirmed
-Placed at: 2026-08-19 08:15:30
-```
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | Serves the single-page web app |
+| `POST` | `/api/chat` | Sends message to Gemini AI Agent and returns response + cart state |
+| `GET` | `/api/menu` | Fetches full restaurant menu and categories |
+| `GET` | `/api/cart` | Gets active shopping cart state and totals |
+| `POST` | `/api/cart/add` | Adds dish to cart |
+| `POST` | `/api/cart/update` | Updates quantity of an item (+1 / -1) |
+| `POST` | `/api/cart/clear` | Clears all items from cart |
+| `POST` | `/api/orders/place` | Finalizes cart and creates order in SQLite |
+| `GET` | `/api/orders/{id}` | Fetches tracking details and receipt for an order |
 
 ---
 
-## 🛠️ Available Tools
+## 🛡️ Security
 
-| Tool Function | Description |
-| :--- | :--- |
-| `search_menu(query)` | Searches menu items by keyword, category, or description |
-| `add_to_cart(item_id, quantity)` | Adds items to the active cart or updates quantities |
-| `view_cart()` | Displays all items in the cart and subtotal/total |
-| `place_order()` | Finalizes the cart and records the order into SQLite |
-| `track_order(order_id)` | Looks up order status and timestamps |
-
----
-
-## 🛡️ Security Notes
-
-- **Never commit your `.env` file** to GitHub. The included `.gitignore` prevents `.env` and local `.db` files from being tracked.
+- The `.gitignore` prevents `.env` and local SQLite database files from being pushed to public version control.
 
 ---
 
