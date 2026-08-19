@@ -26,7 +26,7 @@ def get_or_create_chat_session(session_id: str = None):
     
     if session_id not in _sessions:
         _sessions[session_id] = client.chats.create(
-            model="gemini-2.5-flash-lite",
+            model="gemini-2.5-flash",
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
                 tools=[search_menu, add_to_cart, view_cart, place_order, track_order],

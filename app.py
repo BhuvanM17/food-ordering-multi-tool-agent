@@ -20,6 +20,9 @@ from tools import (
     get_order_details,
 )
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize SQLite database and seed menu
@@ -42,9 +45,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static assets
-os.makedirs("static", exist_ok=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Mount static assets with robust absolute paths
+os.makedirs(STATIC_DIR, exist_ok=True)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+css_dir = os.path.join(STATIC_DIR, "css")
+js_dir = os.path.join(STATIC_DIR, "js")
+if os.path.exists(css_dir):
+    app.mount("/css", StaticFiles(directory=css_dir), name="css")
+if os.path.exists(js_dir):
+    app.mount("/js", StaticFiles(directory=js_dir), name="js")
 
 
 # ==================== Request / Response Models ====================
@@ -70,7 +80,7 @@ class CartRemoveRequest(BaseModel):
 @app.get("/")
 async def root():
     """Serve the single-page web app."""
-    index_path = os.path.join("static", "index.html")
+    index_path = os.path.join(STATIC_DIR, "index.html")
     if not os.path.exists(index_path):
         raise HTTPException(status_code=404, detail="Frontend index.html not found.")
     return FileResponse(index_path)
