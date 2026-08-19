@@ -95,8 +95,8 @@ async def chat_endpoint(req: ChatRequest):
     reply, session_id = run_agent(req.message, session_id=req.session_id)
     cart_state = get_cart_data()
     return {
-        "reply": reply,
-        "session_id": session_id,
+        "reply": str(reply) if reply else "",
+        "session_id": str(session_id),
         "cart": cart_state
     }
 

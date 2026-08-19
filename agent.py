@@ -21,12 +21,12 @@ After adding items or placing orders, provide a clear, formatted summary.
 _sessions = {}
 
 def get_or_create_chat_session(session_id: str = None):
-    if not session_id:
+    if not session_id or not isinstance(session_id, str):
         session_id = str(uuid.uuid4())
     
     if session_id not in _sessions:
         _sessions[session_id] = client.chats.create(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-flash-lite",
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
                 tools=[search_menu, add_to_cart, view_cart, place_order, track_order],
@@ -37,13 +37,14 @@ def get_or_create_chat_session(session_id: str = None):
 
 def run_agent(user_message: str, conversation_history=None, session_id: str = None):
     """Runs the agent using Gemini's native chat session with automatic tool execution."""
-    if session_id:
+    # Web API mode: always return (str_reply, str_session_id)
+    if session_id is not None or conversation_history is None:
         sid, chat_session = get_or_create_chat_session(session_id)
         response = chat_session.send_message(user_message)
-        return response.text, sid
+        return response.text or "", sid
 
     # Fallback for CLI main.py
-    if conversation_history is None or not hasattr(conversation_history, "send_message"):
+    if not hasattr(conversation_history, "send_message"):
         conversation_history = client.chats.create(
             model="gemini-2.5-flash-lite",
             config=types.GenerateContentConfig(
@@ -55,4 +56,4 @@ def run_agent(user_message: str, conversation_history=None, session_id: str = No
     
     chat_session = conversation_history
     response = chat_session.send_message(user_message)
-    return response.text, chat_session
+    return response.text or "", chat_session
